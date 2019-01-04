@@ -3,6 +3,7 @@ package com.TAP.vaadin_gestor;
 import javax.servlet.annotation.WebServlet;
 
 import com.vaadin.annotations.Theme;
+import com.vaadin.annotations.Title;
 import com.vaadin.annotations.VaadinServletConfiguration;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
@@ -26,6 +27,7 @@ import com.vaadin.ui.Window;
  * overridden to add component to the user interface and initialize non-component functionality.
  */
 @Theme("mytheme")
+@Title("Gestor de inventario")
 public class MyUI extends UI {
 
     /*@Override
@@ -46,7 +48,11 @@ public class MyUI extends UI {
         setContent(layout);
     }*/
 
-private Producto productoSeleccionado; 
+private Producto productoSeleccionado;
+private int inventario = 0;
+private double balanceAux;
+Balance balance = new Balance(0);
+ConversorDolar conversorDolar = new ConversorDolar();
 	
     @Override
     protected void init(VaadinRequest vaadinRequest) {
@@ -61,25 +67,64 @@ private Producto productoSeleccionado;
         VerticalLayout subContent1 = new VerticalLayout();
         VerticalLayout subContent2 = new VerticalLayout();
         VerticalLayout subContent3 = new VerticalLayout();
+        VerticalLayout subContent4 = new VerticalLayout();
         HorizontalLayout horizontalLayoutWindow = new HorizontalLayout();
         
         Label labelNombre = new Label();
         Label labelCantidad = new Label();
         Label labelPrecio = new Label();
+    	Label labelInventario = new Label();
+        Label labelBalance = new Label();
+        Label labelDivisa = new Label();
+        Label labelTransaccion = new Label();
         TextField textFieldNombreVentana = new TextField("Nombre");
     	TextField textFieldCantidadVentana = new TextField("Cantidad");
     	TextField textFieldPrecioVentana = new TextField("Precio");
-        Button buttonDelete = new Button("Eliminar producto");
+    	TextField textFieldCantidadCVVentana = new TextField("Cantidad para comprar/vender");
+        Button buttonDelete = new Button("Vender todo y eliminar");
+        Button buttonComprar = new Button("Comprar");
+        Button buttonVender = new Button("Vender");
         Button buttonModifyNombre = new Button("Modificar nombre");
-        Button buttonModifyCantidad = new Button("Modificar cantidad");
-        Button buttonModifyPrecio = new Button("Modificar precio");
+        Button buttonModifyCantidad = new Button("Modificar cantidad (no afecta al balance)");
+        Button buttonModifyPrecio = new Button("Fijar precio del producto");
         
         buttonDelete.addClickListener(e -> {
         	Inventario.getInstance().deleteProducto(productoSeleccionado);
+        	inventario -= productoSeleccionado.getCantidad();
+    		balanceAux = balance.getValor() + productoSeleccionado.getPrecio() * productoSeleccionado.getCantidad();
+    		balance.setValor(balanceAux);
+    		labelInventario.setValue("Inventario: " + Integer.toString(inventario) + " productos");
+        	labelBalance.setValue("Balance: " + Double.toString(balance.getValor()));
         	grid.setItems(Inventario.getInstance().getProductos());
         	removeWindow(subWindow);
         });
     	
+        buttonComprar.addClickListener(e -> {
+        	Producto p = new Producto(Integer.parseInt(textFieldCantidadCVVentana.getValue()));
+        	inventario += p.getCantidad();
+    		balanceAux = balance.getValor() - productoSeleccionado.getPrecio() * p.getCantidad();
+    		balance.setValor(balanceAux);
+    		labelInventario.setValue("Inventario: " + Integer.toString(inventario) + " productos");
+        	labelBalance.setValue("Balance: " + Double.toString(balance.getValor()));
+    		productoSeleccionado.setCantidad(productoSeleccionado.getCantidad() + p.getCantidad());
+    		grid.setItems(Inventario.getInstance().getProductos());
+    		textFieldCantidadCVVentana.clear();
+    		removeWindow(subWindow);
+        });
+        
+        buttonVender.addClickListener(e -> {
+        	Producto p = new Producto(Integer.parseInt(textFieldCantidadCVVentana.getValue()));
+        	inventario -= p.getCantidad();
+    		balanceAux = balance.getValor() + productoSeleccionado.getPrecio() * p.getCantidad();
+    		balance.setValor(balanceAux);
+    		labelInventario.setValue("Inventario: " + Integer.toString(inventario) + " productos");
+        	labelBalance.setValue("Balance: " + Double.toString(balance.getValor()));
+    		productoSeleccionado.setCantidad(productoSeleccionado.getCantidad() - p.getCantidad());
+    		grid.setItems(Inventario.getInstance().getProductos());
+    		textFieldCantidadCVVentana.clear();
+    		removeWindow(subWindow);
+        });
+        
         buttonModifyNombre.addClickListener(e -> {
         	Producto p = new Producto(textFieldNombreVentana.getValue());
     		productoSeleccionado.setNombre(p.getNombre());
@@ -89,16 +134,18 @@ private Producto productoSeleccionado;
         });
         
         buttonModifyCantidad.addClickListener(e -> {
-        	Producto p = new Producto(textFieldCantidadVentana.getValue());
-    		productoSeleccionado.setCantidad(p.getNombre());
+        	Producto p = new Producto(Integer.parseInt(textFieldCantidadVentana.getValue()));
+        	inventario -= productoSeleccionado.getCantidad() - p.getCantidad();
+        	labelInventario.setValue("Inventario: " + Integer.toString(inventario) + " productos");
+    		productoSeleccionado.setCantidad(p.getCantidad());
     		grid.setItems(Inventario.getInstance().getProductos());
     		textFieldCantidadVentana.clear();
     		removeWindow(subWindow);
         });
         
         buttonModifyPrecio.addClickListener(e -> {
-        	Producto p = new Producto(textFieldPrecioVentana.getValue());
-    		productoSeleccionado.setPrecio(p.getNombre());
+        	Producto p = new Producto(Double.parseDouble(textFieldPrecioVentana.getValue()));
+    		productoSeleccionado.setPrecio(p.getPrecio());
     		grid.setItems(Inventario.getInstance().getProductos());
     		textFieldPrecioVentana.clear();
     		removeWindow(subWindow);
@@ -106,14 +153,16 @@ private Producto productoSeleccionado;
         
       
         subContent1.addComponents(new Label("Nombre:"), labelNombre, new Label("Cantidad:"),
-        		labelCantidad, new Label("Precio:"), labelPrecio, buttonDelete);
+        		labelCantidad, new Label("Precio:"), labelPrecio);
         
         subContent2.addComponents(textFieldNombreVentana, textFieldCantidadVentana, textFieldPrecioVentana);
         
         subContent3.addComponents(buttonModifyNombre, new Label(), buttonModifyCantidad,
         		new Label(), buttonModifyPrecio);
         
-        horizontalLayoutWindow.addComponents(subContent1, subContent2, subContent3);
+        subContent4.addComponents(textFieldCantidadCVVentana, buttonComprar, buttonVender, buttonDelete);
+        
+        horizontalLayoutWindow.addComponents(subContent1, subContent2, subContent3, subContent4);
         
         
         
@@ -138,8 +187,8 @@ private Producto productoSeleccionado;
     		
         	// Notification.show("Value: " + event.getItem());
         	labelNombre.setValue(productoSeleccionado.getNombre());
-        	labelCantidad.setValue(productoSeleccionado.getCantidad());
-        	labelPrecio.setValue(productoSeleccionado.getPrecio());
+        	labelCantidad.setValue(Integer.toString(productoSeleccionado.getCantidad()));
+        	labelPrecio.setValue(Double.toString(productoSeleccionado.getPrecio()));
         	
         	
         	removeWindow(subWindow);
@@ -156,17 +205,23 @@ private Producto productoSeleccionado;
     	TextField textFieldNombre = new TextField("Nombre");
     	TextField textFieldCantidad = new TextField("Cantidad");
     	TextField textFieldPrecio = new TextField("Precio");
-    	Button buttonAdd = new Button("Añadir nuevo producto");
+    	Button buttonAdd = new Button("Comprar un nuevo producto");
     			
     	buttonAdd.addClickListener(e -> {
     		
     		Producto p = new Producto(
     				textFieldNombre.getValue(),
-    				textFieldCantidad.getValue(),
-    				textFieldPrecio.getValue()
+    				Integer.parseInt(textFieldCantidad.getValue()),
+    				Double.parseDouble(textFieldPrecio.getValue())
     				);
     		
     		Inventario.getInstance().addProducto(p);
+    		
+    		inventario += p.getCantidad();
+    		balanceAux = balance.getValor() - p.getPrecio() * p.getCantidad();
+    		balance.setValor(balanceAux);
+    		labelInventario.setValue("Inventario: " + Integer.toString(inventario) + " productos");
+        	labelBalance.setValue("Balance: " + Double.toString(balance.getValor()));
     		
     		textFieldNombre.clear();
     		textFieldCantidad.clear();
@@ -190,8 +245,78 @@ private Producto productoSeleccionado;
     			buttonAdd
     	);
     	
+    	
+    	/* FORM2 */
+    	
+    	
+    	FormLayout formLayout2 = new FormLayout();
+    	
+    	
+    	Button buttonDivisa = new Button("Cambiar divisa");
+		
+        
+        labelInventario.setValue("Inventario: " + Integer.toString(inventario) + " productos");
+    	labelBalance.setValue("Balance: " + Double.toString(balance.getValor()));
+    	labelDivisa.setValue("Divisa actual: euros");
+    	
+    	
+    	buttonDivisa.addClickListener(e -> {
+    		balance.addObserver(conversorDolar);
+    		balanceAux = balance.getValor();
+    		balance.setValor(balanceAux);
+    		labelBalance.setValue("Balance: " + Double.toString(conversorDolar.getValor()));
+        	labelDivisa.setValue("Divisa actual: dólares");
+    	});
+    	
+    	
+    	formLayout2.addComponents(
+    			labelInventario,
+    			labelBalance,
+    			labelDivisa,
+    			buttonDivisa
+    	);
+    	
+    	
+    	/* FORM3 */
+    	
+    	
+    	FormLayout formLayout3 = new FormLayout();
+    	
+    	
+    	TextField textFieldIngGas = new TextField();
+    	Button buttonIngreso = new Button("Realizar ingreso");
+    	Button buttonGasto = new Button("Realizar gasto");
+    	
+    	
+    	labelTransaccion.setValue("Introduzca transacción:");
+    	
+    	
+    	buttonIngreso.addClickListener(e -> {
+    		Producto p = new Producto(Double.parseDouble(textFieldIngGas.getValue()));
+    		balanceAux = balance.getValor() + p.getPrecio();
+    		balance.setValor(balanceAux);
+        	labelBalance.setValue("Balance: " + Double.toString(balance.getValor()));
+    		textFieldIngGas.clear();
+    	});
+    	
+    	buttonGasto.addClickListener(e -> {
+    		Producto p = new Producto(Double.parseDouble(textFieldIngGas.getValue()));
+    		balanceAux = balance.getValor() - p.getPrecio();
+    		balance.setValor(balanceAux);
+        	labelBalance.setValue("Balance: " + Double.toString(balance.getValor()));
+    		textFieldIngGas.clear();
+    	});
+    	
+    	
+    	formLayout3.addComponents(
+    			labelTransaccion,
+    			textFieldIngGas,
+    			buttonIngreso,
+    			buttonGasto
+    	);
+    	
     
-    	horizontalLayout.addComponents(grid, formLayout);
+    	horizontalLayout.addComponents(grid, formLayout, formLayout2, formLayout3);
     	
     	
     	

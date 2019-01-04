@@ -3,19 +3,29 @@ package com.TAP.vaadin_gestor;
 public class Producto {
 
 	private String nombre;
-	private String cantidad;
-	private String precio;
-	
-	public Producto(String nombre, String cantidad, String precio) {
-		super();
-		this.nombre = nombre;
-		this.cantidad = cantidad;
-		this.precio = precio;
-	}
+	private int cantidad;
+	private double precio;
 	
 	public Producto(String nombre) {
 		super();
 		this.nombre = nombre;
+	}
+	
+	public Producto(int cantidad) {
+		super();
+		this.cantidad = cantidad;
+	}
+	
+	public Producto(double precio) {
+		super();
+		this.precio = precio;
+	}
+	
+	public Producto(String nombre, int cantidad, double precio) {
+		super();
+		this.nombre = nombre;
+		this.cantidad = cantidad;
+		this.precio = precio;
 	}
 	
 	public String getNombre() {
@@ -26,19 +36,19 @@ public class Producto {
 		this.nombre = nombre;
 	}
 	
-	public String getCantidad() {
+	public int getCantidad() {
 		return cantidad;
 	}
 	
-	public void setCantidad(String cantidad) {
+	public void setCantidad(int cantidad) {
 		this.cantidad = cantidad;
 	}
 	
-	public String getPrecio() {
+	public double getPrecio() {
 		return precio;
 	}
 	
-	public void setPrecio(String precio) {
+	public void setPrecio(double precio) {
 		this.precio = precio;
 	}
 	
