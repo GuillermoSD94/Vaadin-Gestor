@@ -1,7 +1,7 @@
 package com.TAP.vaadin_gestor;
 
 public class Producto {
-
+	
 	private String nombre;
 	private int cantidad;
 	private double precio;

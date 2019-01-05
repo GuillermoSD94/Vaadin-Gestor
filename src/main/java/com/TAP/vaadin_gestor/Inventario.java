@@ -7,7 +7,7 @@ public class Inventario {
 	
 	private static Inventario singleton;
 	private List<Producto> productos;
-
+	
 	private Inventario() {
 		super();
 		productos = new ArrayList<>();
@@ -25,8 +25,7 @@ public class Inventario {
 		productos.add(p);
 	}
 	
-	public void deleteProducto(Producto p)
-	{
+	public void deleteProducto(Producto p) {
 		productos.remove(p);
 	}
 	
@@ -34,6 +33,4 @@ public class Inventario {
 		return productos;
 	}
 	
-
-
 }

@@ -1,5 +1,6 @@
 package com.TAP.vaadin_gestor;
 
 public interface ConversorDivisa {
-	void update(double valor);
+	double valor(double valor, String divisa);
+	String divisa(String divisa);
 }
