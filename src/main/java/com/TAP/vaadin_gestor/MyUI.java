@@ -16,7 +16,6 @@ import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
@@ -310,7 +309,7 @@ public class MyUI extends UI {
     		Producto p = new Producto(textFieldNombre.getValue(), Integer.parseInt(textFieldCantidad.getValue()),
     				Double.parseDouble(textFieldPrecio.getValue()));
     		Inventario.getInstance().addProducto(p);
-    		Transaccion t = new Transaccion(ahora, "Gasto", p.getPrecio(), balance.getDivisa());
+    		Transaccion t = new Transaccion(ahora, "Gasto", p.getPrecio() * p.getCantidad(), balance.getDivisa());
     		Balance.getInstance().addTransaccion(t);
     		inventario += p.getCantidad();
     		balanceAux = balance.getValor() - p.getPrecio() * p.getCantidad();
@@ -321,7 +320,6 @@ public class MyUI extends UI {
     		textFieldCantidad.clear();
     		textFieldPrecio.clear();
     		grid.setItems(Inventario.getInstance().getProductos());
-    		Notification.show("¡Producto añadido! Ya tenemos " + Inventario.getInstance().getProductos().size());
     	});
     	
     	formLayout.addComponents(textFieldNombre, textFieldCantidad, textFieldPrecio, buttonAdd);

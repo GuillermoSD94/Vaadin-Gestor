@@ -48,5 +48,9 @@ public class Transaccion {
 	public void setDivisa(String divisa) {
 		this.divisa = divisa;
 	}
+
+	public String getTodo() {
+		return fecha + transaccion + valor + divisa;
+	}
 	
 }
